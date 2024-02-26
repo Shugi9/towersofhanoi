@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+<canvas id="myCanvas" width="1200" height="600"></canvas>
+<input id="numDiscsInput" type="number" min="1" max="22" value="6">
+<button id="solveButton">Solve</button>
+<script>
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+
+var discColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF'];
+var towers = [[], [], []];
+var towerWidth = 30;
+var towerGap = canvas.width / 3; // Adjusted gap between towers
+var moves = [];
+
+function drawTower(x) {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x, canvas.height -10, towerWidth, 10);
+    ctx.fillRect(x + towerWidth / 2 - 5, 0, 10, canvas.height);
+}
+
+function drawDisc(towerIndex, discIndex, discSize) {
+    var discHeight = canvas.height / 44;
+    var discWidthIncrement = (towerGap - towerWidth) / 22;
+    var x = towerGap * towerIndex + towerWidth / 2 - discSize * discWidthIncrement / 2; // Adjusted x position
+    var y = canvas.height - 10 - discHeight * (discIndex + 1);
+    ctx.fillStyle = discColors[discSize % discColors.length];
+    ctx.fillRect(x, y, discSize * discWidthIncrement, discHeight);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < 3; i++) {
+        drawTower(towerGap * i);
+        for (var j = 0; j < towers[i].length; j++) {
+            drawDisc(i, j, towers[i][j]);
+        }
+    }
+}
+
+function moveDisc(from, to) {
+    if (towers[from].length === 0) return false;
+    if (towers[to].length === 0 || towers[to][towers[to].length - 1] > towers[from][towers[from].length - 1]) {
+        towers[to].push(towers[from].pop());
+        return true;
+    }
+    return false;
+}
+
+function hanoi(n, from, to, via) {
+    if (n === 0) return;
+    hanoi(n - 1, from, via, to);
+    moves.push({from: from, to: to});
+    hanoi(n - 1, via, to, from);
+}
+
+function executeMoves() {
+    if (moves.length === 0) return;
+    var move = moves.shift();
+    moveDisc(move.from, move.to);
+    draw();
+    setTimeout(executeMoves, 1000);
+}
+
+document.getElementById('solveButton').addEventListener('click', function() {
+    var numDiscs = document.getElementById('numDiscsInput').value;
+    towers = [[], [], []];
+    for (var i = numDiscs; i > 0; i--) {
+        towers[0].push(i);
+    }
+    draw();
+    hanoi(numDiscs, 0, 2, 1);
+    executeMoves();
+});
+</script>
+</body>
+</html>
